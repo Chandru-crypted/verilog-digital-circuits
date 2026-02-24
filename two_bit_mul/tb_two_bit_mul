@@ -1,0 +1,71 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 24.02.2026 13:35:12
+// Design Name: 
+// Module Name: tb_two_bit_mul
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+
+module tb_two_bit_mul();
+
+localparam NUM_OF_TEST_CASE = 5;
+
+reg [3:0] input_vec [NUM_OF_TEST_CASE - 1:0];
+reg [3:0] expected_out_vec [NUM_OF_TEST_CASE - 1:0];
+
+reg [1:0] inp1, inp2;
+wire [3:0] res;
+
+two_bit_mul mul (
+    .inp1(inp1),
+    .inp2(inp2),
+    .res(res)
+);
+
+integer test_loop_indx;    
+initial begin
+   input_vec[0] = 4'b0000;
+   expected_out_vec[0] = 4'b0000;
+
+   input_vec[1] = 4'b0101;
+   expected_out_vec[1] = 4'b0001;
+   
+   input_vec[2] = 4'b1010; // 2 * 2
+   expected_out_vec[2] = 4'b0000; // 4   
+   
+   input_vec[3] = 4'b1110; // 3 * 2
+   expected_out_vec[3] = 4'b0110; // 6      
+   
+   input_vec[4] = 4'b1111; // 3 * 3
+   expected_out_vec[4] = 4'b1001; // 9        
+        
+    $display("Testing Multiplier \n");
+    for (test_loop_indx = 0; test_loop_indx < NUM_OF_TEST_CASE; test_loop_indx = test_loop_indx + 1) begin
+        {inp2, inp1} = input_vec[test_loop_indx];
+        #1 // propagation delay
+        if (res !== expected_out_vec[test_loop_indx]) begin  // !== to compare x, z also
+            $display("X Failed [%0d] case \n", test_loop_indx);
+        end
+        else begin
+            $display("Passed [%0d] case \n", test_loop_indx);            
+        end
+    end            
+        
+end
+
+
+endmodule
