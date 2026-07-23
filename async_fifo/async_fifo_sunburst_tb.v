@@ -74,7 +74,7 @@ task reset_fifo_both_clks();
     repeat (5) @(posedge i_wrclk); i_wrresetn <= 1'b0; 
     repeat (5) @(posedge i_rdclk); i_rdresetn <= 1'b0; 
     repeat (5) @(posedge i_wrclk); i_wrresetn <= 1'b1; 
-    repeat (5) @(posedge i_rdclk); i_rdresetn = 1'b1;
+    repeat (5) @(posedge i_rdclk); i_rdresetn <= 1'b1;
     @(posedge i_wrclk);  
     @(posedge i_rdclk);    
     
@@ -90,7 +90,14 @@ task test_simultaneous_rw(input int num_transactions);
             for (int w = 0; w < num_transactions; w++) begin
                 // Wait if FIFO is full before writing
                  $display("Before while write %d", w);
-                while (o_w_wrfull) @(posedge i_wrclk);
+
+                 // 1. Wait until FIFO is NOT full before attempting a write
+                 // We check right after a clock edge (+ #1 delay to avoid race condition)
+                 do begin
+                     @(posedge i_wrclk);
+                     #1; // Step away from the exact edge so DUT status flags can update
+                 end while (o_w_wrfull);
+                 
                 $display("After while write %d", w);
                 write_into_fifo(w + 1);
             end
@@ -104,7 +111,13 @@ task test_simultaneous_rw(input int num_transactions);
             for (int r = 0; r < num_transactions; r++) begin
                 // Wait if FIFO is empty before reading
                 $display("Before while read %d", r);
-                while (o_w_rdempty) @(posedge i_rdclk);
+                
+                // 1. Wait until FIFO is NOT empty before attempting a read
+                do begin
+                    @(posedge i_rdclk);
+                    #1; // Step away from the exact edge so DUT status flags can update
+                end while (o_w_rdempty);
+                
                 $display("After while read %d", r);
                 read_from_fifo();
             end
